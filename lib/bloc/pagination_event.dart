@@ -8,10 +8,10 @@ class PageFetch<T> implements PaginationEvent<T> {
     @required this.callback,
   });
 
-  final Future<List<T>> Function(int currentListSize) callback;
+  final PaginationBuilder<T> callback;
 
   PageFetch<T> copyWith({
-    Future<List<T>> Function(int currentListSize) callback,
+    Future<List<T>> Function(int currentListSize, T currentListItem) callback,
   }) {
     return PageFetch<T>(
       callback: callback ?? this.callback,

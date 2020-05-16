@@ -7,7 +7,7 @@ void main() {
     final tPreloadedList = [1, 2];
     final tList = [1, 2, 3, 4];
 
-    Future<List<int>> _pageFetch(int offset) {
+    Future<List<int>> _pageFetch(int offset, int item) {
       return Future<List<int>>.value(tList);
     }
 

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 
+import '../pagination_view.dart';
+
 part 'pagination_event.dart';
 part 'pagination_state.dart';
 
@@ -20,11 +22,11 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
   Stream<PaginationState<T>> mapEventToState(PaginationEvent<T> event) async* {
     if (event is PageFetch) {
       final currentState = state;
-      final fetchEvent = event as PageFetch;
+      final fetchEvent = event as PageFetch<T>;
       if (!_hasReachedEnd(currentState)) {
         try {
           if (currentState is PaginationInitial) {
-            final firstItems = await fetchEvent.callback(0);
+            final firstItems = await fetchEvent.callback(0, null);
             yield PaginationLoaded(
               items: firstItems,
               hasReachedEnd: firstItems.isEmpty,
@@ -33,8 +35,8 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
           }
           if (currentState is PaginationLoaded<T>) {
             final newItems = await fetchEvent.callback(
-              _getAbsoluteOffset(currentState.items.length),
-            );
+                _getAbsoluteOffset(currentState.items.length),
+                currentState.items[currentState.items.length - 1]);
             yield currentState.copyWith(
               items: currentState.items + newItems,
               hasReachedEnd: newItems.isEmpty,

@@ -98,8 +98,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<List<User>> pageFetch(int offset) async {
+  Future<List<User>> pageFetch(int offset, User currentUser) async {
     print(offset);
+    print(currentUser);
     page++;
     final Faker faker = Faker();
     final List<User> nextUsersList = List.generate(

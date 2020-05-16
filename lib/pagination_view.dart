@@ -6,7 +6,8 @@ import 'widgets/bottom_loader.dart';
 import 'widgets/empty_separator.dart';
 import 'widgets/initial_loader.dart';
 
-typedef PaginationBuilder<T> = Future<List<T>> Function(int currentListSize);
+typedef PaginationBuilder<T> = Future<List<T>> Function(
+    int currentListSize, T currentListItem);
 
 enum PaginationViewType { listView, gridView }
 
@@ -84,7 +85,7 @@ class _PaginationViewState<T> extends State<PaginationView<T>> {
   void initState() {
     super.initState();
     _bloc = PaginationBloc<T>(widget.preloadedItems)
-      ..add(PageFetch(callback: widget.pageFetch));
+      ..add(PageFetch<T>(callback: widget.pageFetch));
   }
 
   Widget _buildNewListView(PaginationLoaded<T> loadedState) {
@@ -101,7 +102,7 @@ class _PaginationViewState<T> extends State<PaginationView<T>> {
           : loadedState.items.length + 1,
       itemBuilder: (context, index) {
         if (index >= loadedState.items.length) {
-          _bloc.add(PageFetch(callback: widget.pageFetch));
+          _bloc.add(PageFetch<T>(callback: widget.pageFetch));
           return widget.bottomLoader;
         }
         return widget.itemBuilder(context, loadedState.items[index], index);
@@ -123,10 +124,10 @@ class _PaginationViewState<T> extends State<PaginationView<T>> {
           : loadedState.items.length + 1,
       itemBuilder: (context, index) {
         if (index >= loadedState.items.length) {
-          _bloc.add(PageFetch(callback: widget.pageFetch));
+          _bloc.add(PageFetch<T>(callback: widget.pageFetch));
           return widget.bottomLoader;
         }
-        return widget.itemBuilder(context, loadedState.items[index],index);
+        return widget.itemBuilder(context, loadedState.items[index], index);
       },
     );
   }
