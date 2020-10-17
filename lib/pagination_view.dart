@@ -18,6 +18,8 @@ class PaginationView<T> extends StatefulWidget {
     @required this.pageFetch,
     @required this.onEmpty,
     @required this.onError,
+    this.pageRefresh,
+    this.pullToRefresh = false,
     this.separator = const EmptySeparator(),
     this.gridDelegate =
         const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
@@ -37,8 +39,10 @@ class PaginationView<T> extends StatefulWidget {
   final Widget onEmpty;
   final EdgeInsets padding;
   final PaginationBuilder<T> pageFetch;
+  final PaginationBuilder<T> pageRefresh;
   final ScrollPhysics physics;
   final List<T> preloadedItems;
+  final bool pullToRefresh;
   final bool reverse;
   final Axis scrollDirection;
   final Widget separator;
@@ -47,14 +51,14 @@ class PaginationView<T> extends StatefulWidget {
   final bool shrinkWrap;
 
   @override
-  _PaginationViewState<T> createState() => _PaginationViewState<T>();
+  PaginationViewState<T> createState() => PaginationViewState<T>();
 
   final Widget Function(BuildContext, T, int) itemBuilder;
 
   final Widget Function(dynamic) onError;
 }
 
-class _PaginationViewState<T> extends State<PaginationView<T>> {
+class PaginationViewState<T> extends State<PaginationView<T>> {
   PaginationBloc<T> _bloc;
   final _scrollController = ScrollController();
 
@@ -73,7 +77,19 @@ class _PaginationViewState<T> extends State<PaginationView<T>> {
             return widget.onEmpty;
           }
           if (widget.paginationViewType == PaginationViewType.gridView) {
+            if (widget.pullToRefresh) {
+              return RefreshIndicator(
+                onRefresh: () async => refresh(),
+                child: _buildNewGridView(loadedState),
+              );
+            }
             return _buildNewGridView(loadedState);
+          }
+          if (widget.pullToRefresh) {
+            return RefreshIndicator(
+              onRefresh: () async => refresh(),
+              child: _buildNewListView(loadedState),
+            );
           }
           return _buildNewListView(loadedState);
         }
@@ -130,5 +146,15 @@ class _PaginationViewState<T> extends State<PaginationView<T>> {
         return widget.itemBuilder(context, loadedState.items[index], index);
       },
     );
+  }
+
+  void refresh() {
+    if (widget.pageRefresh == null) {
+      throw Exception('pageRefresh parameter cannot be null');
+    }
+    _bloc.add(PageRefreshed(
+      callback: widget.pageRefresh,
+      scrollController: _scrollController,
+    ));
   }
 }

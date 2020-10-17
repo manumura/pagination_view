@@ -1,7 +1,7 @@
 #### `example/lib/main.dart`
 
 ```dart
-import 'package:example/user.dart';
+import 'package:example/user_model.dart';
 import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
 import 'package:pagination_view/pagination_view.dart';

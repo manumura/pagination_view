@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../pagination_view.dart';
 
@@ -48,7 +49,25 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
       }
     }
     if (event is PageRefreshed) {
-      yield PaginationInitial();
+      final currentState = state;
+      final refreshEvent = event as PageRefreshed;
+      if (!_hasReachedEnd(currentState)) {
+        try {
+          if (currentState is PaginationInitial) {
+            return;
+          }
+          if (currentState is PaginationLoaded<T>) {
+            final refreshedItems = await refreshEvent.callback(0, null);
+            yield PaginationLoaded(
+              items: refreshedItems,
+              hasReachedEnd: refreshedItems.isEmpty,
+            );
+            refreshEvent.scrollController.jumpTo(0);
+          }
+        } on Exception catch (error) {
+          yield PaginationError(error: error);
+        }
+      }
     }
   }
 

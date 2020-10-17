@@ -19,4 +19,22 @@ class PageFetch<T> implements PaginationEvent<T> {
   }
 }
 
-class PageRefreshed<T> implements PaginationEvent<T> {}
+class PageRefreshed<T> implements PaginationEvent<T> {
+  PageRefreshed({
+    @required this.callback,
+    @required this.scrollController,
+  });
+
+  final PaginationBuilder<T> callback;
+  final ScrollController scrollController;
+
+  PageRefreshed<T> copyWith(
+      {Future<List<T>> Function(int currentListSize, T currentListItem)
+          callback,
+      ScrollController scrollController}) {
+    return PageRefreshed<T>(
+      callback: callback ?? this.callback,
+      scrollController: scrollController ?? this.scrollController,
+    );
+  }
+}
