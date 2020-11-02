@@ -20,7 +20,6 @@ class PaginationView<T> extends StatefulWidget {
     @required this.onError,
     this.pageRefresh,
     this.pullToRefresh = false,
-    this.separator = const EmptySeparator(),
     this.gridDelegate =
         const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
     this.preloadedItems = const [],
@@ -32,6 +31,8 @@ class PaginationView<T> extends StatefulWidget {
     this.scrollDirection = Axis.vertical,
     this.padding = const EdgeInsets.all(0),
     this.physics,
+    this.separatorBuilder,
+    this.scrollController,
   }) : super(key: key);
 
   final Widget bottomLoader;
@@ -45,27 +46,28 @@ class PaginationView<T> extends StatefulWidget {
   final bool pullToRefresh;
   final bool reverse;
   final Axis scrollDirection;
-  final Widget separator;
   final SliverGridDelegate gridDelegate;
   final PaginationViewType paginationViewType;
   final bool shrinkWrap;
+  final ScrollController scrollController;
 
   @override
   PaginationViewState<T> createState() => PaginationViewState<T>();
 
   final Widget Function(BuildContext, T, int) itemBuilder;
+  final Widget Function(BuildContext, int) separatorBuilder;
 
   final Widget Function(dynamic) onError;
 }
 
 class PaginationViewState<T> extends State<PaginationView<T>> {
   PaginationBloc<T> _bloc;
-  final _scrollController = ScrollController();
+  ScrollController _scrollController;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PaginationBloc<T>, PaginationState<T>>(
-      bloc: _bloc,
+      cubit: _bloc,
       builder: (context, state) {
         if (state is PaginationInitial<T>) {
           return widget.initialLoader;
@@ -100,6 +102,7 @@ class PaginationViewState<T> extends State<PaginationView<T>> {
   @override
   void initState() {
     super.initState();
+    _scrollController = widget.scrollController ?? ScrollController();
     _bloc = PaginationBloc<T>(widget.preloadedItems)
       ..add(PageFetch<T>(callback: widget.pageFetch));
   }
@@ -112,7 +115,8 @@ class PaginationViewState<T> extends State<PaginationView<T>> {
       scrollDirection: widget.scrollDirection,
       physics: widget.physics,
       padding: widget.padding,
-      separatorBuilder: (context, index) => widget.separator,
+      separatorBuilder:
+          widget.separatorBuilder ?? ((_, __) => EmptySeparator()),
       itemCount: loadedState.hasReachedEnd
           ? loadedState.items.length
           : loadedState.items.length + 1,

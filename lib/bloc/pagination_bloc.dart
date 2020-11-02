@@ -10,14 +10,10 @@ part 'pagination_event.dart';
 part 'pagination_state.dart';
 
 class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
-  PaginationBloc(this.preloadedItems);
+  PaginationBloc(this.preloadedItems)
+      : super(preloadedItems.isNotEmpty ? PaginationLoaded(items: preloadedItems, hasReachedEnd: false) : PaginationInitial<T>());
 
   final List<T> preloadedItems;
-
-  @override
-  PaginationState<T> get initialState => preloadedItems.isNotEmpty
-      ? PaginationLoaded(items: preloadedItems, hasReachedEnd: false)
-      : PaginationInitial<T>();
 
   @override
   Stream<PaginationState<T>> mapEventToState(PaginationEvent<T> event) async* {
@@ -35,9 +31,7 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
             return;
           }
           if (currentState is PaginationLoaded<T>) {
-            final newItems = await fetchEvent.callback(
-                _getAbsoluteOffset(currentState.items.length),
-                currentState.items[currentState.items.length - 1]);
+            final newItems = await fetchEvent.callback(_getAbsoluteOffset(currentState.items.length), currentState.items[currentState.items.length - 1]);
             yield currentState.copyWith(
               items: currentState.items + newItems,
               hasReachedEnd: newItems.isEmpty,
@@ -51,28 +45,27 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
     if (event is PageRefreshed) {
       final currentState = state;
       final refreshEvent = event as PageRefreshed;
-      if (!_hasReachedEnd(currentState)) {
-        try {
-          if (currentState is PaginationInitial) {
-            return;
-          }
-          if (currentState is PaginationLoaded<T>) {
-            final refreshedItems = await refreshEvent.callback(0, null);
-            yield PaginationLoaded(
-              items: refreshedItems,
-              hasReachedEnd: refreshedItems.isEmpty,
-            );
+      try {
+        if (currentState is PaginationInitial) {
+          return;
+        }
+        if (currentState is PaginationLoaded<T>) {
+          final refreshedItems = await refreshEvent.callback(0, null);
+          yield PaginationLoaded(
+            items: refreshedItems,
+            hasReachedEnd: refreshedItems.isEmpty,
+          );
+          if (refreshEvent.scrollController.hasClients) {
             refreshEvent.scrollController.jumpTo(0);
           }
-        } on Exception catch (error) {
-          yield PaginationError(error: error);
         }
+      } on Exception catch (error) {
+        yield PaginationError(error: error);
       }
     }
   }
 
-  bool _hasReachedEnd(PaginationState state) =>
-      state is PaginationLoaded && state.hasReachedEnd;
+  bool _hasReachedEnd(PaginationState state) => state is PaginationLoaded && state.hasReachedEnd;
 
   int _getAbsoluteOffset(int offset) => offset - preloadedItems.length;
 }
