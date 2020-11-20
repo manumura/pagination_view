@@ -156,7 +156,7 @@ class PaginationViewState<T> extends State<PaginationView<T>> {
     if (widget.pageRefresh == null) {
       throw Exception('pageRefresh parameter cannot be null');
     }
-    _bloc.add(PageRefreshed(
+    _bloc.add(PageRefreshed<T>(
       callback: widget.pageRefresh,
       scrollController: _scrollController,
     ));
