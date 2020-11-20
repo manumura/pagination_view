@@ -11,7 +11,9 @@ part 'pagination_state.dart';
 
 class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
   PaginationBloc(this.preloadedItems)
-      : super(preloadedItems.isNotEmpty ? PaginationLoaded(items: preloadedItems, hasReachedEnd: false) : PaginationInitial<T>());
+      : super(preloadedItems.isNotEmpty
+            ? PaginationLoaded(items: preloadedItems, hasReachedEnd: false)
+            : PaginationInitial<T>());
 
   final List<T> preloadedItems;
 
@@ -31,7 +33,9 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
             return;
           }
           if (currentState is PaginationLoaded<T>) {
-            final newItems = await fetchEvent.callback(_getAbsoluteOffset(currentState.items.length), currentState.items[currentState.items.length - 1]);
+            final newItems = await fetchEvent.callback(
+                _getAbsoluteOffset(currentState.items.length),
+                currentState.items[currentState.items.length - 1]);
             yield currentState.copyWith(
               items: currentState.items + newItems,
               hasReachedEnd: newItems.isEmpty,
@@ -44,7 +48,7 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
     }
     if (event is PageRefreshed) {
       final currentState = state;
-      final refreshEvent = event as PageRefreshed;
+      final refreshEvent = event as PageRefreshed<T>;
       try {
         if (currentState is PaginationInitial) {
           return;
@@ -65,7 +69,8 @@ class PaginationBloc<T> extends Bloc<PaginationEvent<T>, PaginationState<T>> {
     }
   }
 
-  bool _hasReachedEnd(PaginationState state) => state is PaginationLoaded && state.hasReachedEnd;
+  bool _hasReachedEnd(PaginationState state) =>
+      state is PaginationLoaded && state.hasReachedEnd;
 
   int _getAbsoluteOffset(int offset) => offset - preloadedItems.length;
 }
